@@ -14,6 +14,14 @@
 # Local config
 local.properties
 
+# Signing keystore (NEVER commit)
+/keystore/
+*.keystore
+*.jks
+
+# Built APKs at repo root
+/*.apk
+
 # Native build
 .externalNativeBuild
 .cxx
