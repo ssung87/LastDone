@@ -21,5 +21,8 @@ data class ItemEntity(
     val memo: String? = null,
     val notifyEnabled: Boolean = false,
     val notifyTime: LocalTime? = null,
+    val notifyPreset: String = "MORNING_OF",
+    val repeatIntervalMinutes: Int = 0,
+    val lastNotifiedAt: LocalDateTime? = null,
     val createdAt: LocalDateTime
 )

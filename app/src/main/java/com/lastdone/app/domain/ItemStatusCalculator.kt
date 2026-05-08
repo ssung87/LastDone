@@ -13,6 +13,7 @@ fun calculateItemStatus(
     val remaining = intervalDays - elapsed
     val kind = when {
         remaining < 0 -> ItemStatus.Kind.OVERDUE
+        remaining == 0 -> ItemStatus.Kind.DUE_TODAY
         remaining <= impendingThreshold -> ItemStatus.Kind.IMPENDING
         else -> ItemStatus.Kind.RELAXED
     }

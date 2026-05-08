@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
@@ -45,6 +46,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lastdone.app.core.format.formatIsoDate
+import com.lastdone.app.notification.NotifyPreset
+import com.lastdone.app.notification.RepeatPreset
+import com.lastdone.app.ui.templates.TemplatePickerSheet
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -54,12 +58,15 @@ fun AddItemScreen(
     onSaved: () -> Unit,
     onCancel: () -> Unit,
     itemId: Long? = null,
+    prefill: AddItemPrefill? = null,
     viewModel: AddItemViewModel = viewModel(
-        key = "addItem-${itemId ?: "new"}",
-        factory = AddItemViewModel.factory(itemId)
+        key = "addItem-${itemId ?: "new"}-${prefill?.name ?: ""}",
+        factory = AddItemViewModel.factory(itemId, prefill)
     )
 ) {
     val state by viewModel.state.collectAsState()
+    val userTemplates by viewModel.userTemplates.collectAsState()
+    var showTemplateSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) onSaved()
@@ -102,6 +109,15 @@ fun AddItemScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (!state.isEditMode) {
+                OutlinedButton(
+                    onClick = { showTemplateSheet = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("📋  템플릿에서 선택")
+                }
+            }
+
             OutlinedTextField(
                 value = state.name,
                 onValueChange = viewModel::setName,
@@ -147,6 +163,106 @@ fun AddItemScreen(
                 enabled = state.notifyEnabled,
                 onEnabledChange = viewModel::setNotifyEnabled
             )
+
+            if (state.notifyEnabled) {
+                NotifyPresetDropdown(
+                    selected = state.notifyPreset,
+                    onSelect = viewModel::setNotifyPreset
+                )
+                RepeatPresetDropdown(
+                    selected = state.repeatPreset,
+                    onSelect = viewModel::setRepeatPreset
+                )
+            }
+        }
+    }
+
+    if (showTemplateSheet) {
+        TemplatePickerSheet(
+            userTemplates = userTemplates,
+            categories = state.categories,
+            onSelect = { selection ->
+                viewModel.applyTemplate(selection)
+                showTemplateSheet = false
+            },
+            onDeleteUserTemplate = viewModel::deleteUserTemplate,
+            onDismiss = { showTemplateSheet = false }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotifyPresetDropdown(
+    selected: NotifyPreset,
+    onSelect: (NotifyPreset) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = selected.labelKo,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("알림 시점") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            NotifyPreset.entries.forEach { preset ->
+                DropdownMenuItem(
+                    text = { Text(preset.labelKo) },
+                    onClick = {
+                        onSelect(preset)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RepeatPresetDropdown(
+    selected: RepeatPreset,
+    onSelect: (RepeatPreset) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = selected.labelKo,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("추가 알림") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            RepeatPreset.entries.forEach { preset ->
+                DropdownMenuItem(
+                    text = { Text(preset.labelKo) },
+                    onClick = {
+                        onSelect(preset)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }
@@ -163,7 +279,7 @@ private fun NotifyToggleRow(enabled: Boolean, onEnabledChange: (Boolean) -> Unit
         androidx.compose.foundation.layout.Column(modifier = Modifier.weight(1f)) {
             Text("알림 사용", style = MaterialTheme.typography.bodyLarge)
             Text(
-                text = "권장일 도래 시 설정의 기본 알림 시간에 알려드려요.",
+                text = "권장일 기준으로 정해진 시점에 알림을 받아요.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

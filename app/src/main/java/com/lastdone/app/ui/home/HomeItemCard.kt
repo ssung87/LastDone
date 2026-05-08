@@ -55,6 +55,7 @@ fun HomeItemCard(
 
 private fun mainText(status: ItemStatus): String = when (status.kind) {
     ItemStatus.Kind.OVERDUE -> "+${status.daysOver}"
+    ItemStatus.Kind.DUE_TODAY -> "오늘"
     ItemStatus.Kind.IMPENDING,
     ItemStatus.Kind.RELAXED -> "D-${status.daysRemaining}"
 }

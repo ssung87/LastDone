@@ -49,7 +49,10 @@ class HomeViewModel(
                 )
             )
         }
-        HomeUiState(items = cards.sortedWith(comparatorFor(sortMode)))
+        HomeUiState(
+            items = cards.sortedWith(comparatorFor(sortMode)),
+            groupByStatus = sortMode == SortMode.STATUS
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -83,6 +86,7 @@ private val statusOrder = Comparator<HomeItemUi> { a, b ->
     when (a.status.kind) {
         ItemStatus.Kind.OVERDUE,
         ItemStatus.Kind.IMPENDING -> a.status.daysRemaining.compareTo(b.status.daysRemaining)
+        ItemStatus.Kind.DUE_TODAY -> 0
         ItemStatus.Kind.RELAXED -> b.status.daysRemaining.compareTo(a.status.daysRemaining)
     }
 }

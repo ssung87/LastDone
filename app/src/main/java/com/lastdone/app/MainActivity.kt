@@ -10,7 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.lastdone.app.data.settings.AppSettings
 import com.lastdone.app.data.settings.ThemeMode
 import com.lastdone.app.notification.NotificationHelper
 import com.lastdone.app.notification.NotificationScheduler
@@ -28,11 +27,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeMode by app.settingsRepository.themeMode
                 .collectAsState(initial = ThemeMode.SYSTEM)
-            val notifyTime by app.settingsRepository.notifyTime
-                .collectAsState(initial = AppSettings.DEFAULT_NOTIFY_TIME)
 
-            LaunchedEffect(notifyTime) {
-                NotificationScheduler.scheduleDaily(applicationContext, notifyTime)
+            LaunchedEffect(Unit) {
+                NotificationScheduler.schedule(applicationContext)
             }
 
             val darkTheme = when (themeMode) {

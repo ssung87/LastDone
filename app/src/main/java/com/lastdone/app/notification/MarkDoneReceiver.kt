@@ -25,11 +25,14 @@ class MarkDoneReceiver : BroadcastReceiver() {
                 val app = context.applicationContext as LastDoneApplication
                 val item = app.database.itemDao().getById(itemId) ?: return@launch
                 val today = LocalDate.now()
-                app.database.itemDao().update(item.copy(lastDoneDate = today))
+                app.database.itemDao().update(
+                    item.copy(lastDoneDate = today, lastNotifiedAt = null)
+                )
                 app.database.historyDao().insert(
                     HistoryEntity(itemId = itemId, doneDate = today, memo = null)
                 )
                 NotificationManagerCompat.from(context).cancel(itemId.toInt())
+                RepeatAlarmScheduler.cancel(context, itemId)
             } finally {
                 pendingResult.finish()
             }

@@ -1,5 +1,6 @@
 package com.lastdone.app.ui.itemdetail
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
@@ -10,9 +11,12 @@ import com.lastdone.app.core.format.formatShortDate
 import com.lastdone.app.data.local.dao.CategoryDao
 import com.lastdone.app.data.local.dao.HistoryDao
 import com.lastdone.app.data.local.dao.ItemDao
+import com.lastdone.app.data.local.dao.TemplateDao
 import com.lastdone.app.data.local.entity.HistoryEntity
+import com.lastdone.app.data.local.entity.TemplateEntity
 import com.lastdone.app.data.settings.SettingsRepository
 import com.lastdone.app.domain.calculateItemStatus
+import com.lastdone.app.notification.RepeatAlarmScheduler
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,8 +30,10 @@ import java.time.LocalDate
 
 class ItemDetailViewModel(
     private val itemId: Long,
+    private val appContext: Context,
     private val itemDao: ItemDao,
     private val historyDao: HistoryDao,
+    private val templateDao: TemplateDao,
     categoryDao: CategoryDao,
     settingsRepository: SettingsRepository
 ) : ViewModel() {
@@ -83,7 +89,7 @@ class ItemDetailViewModel(
         viewModelScope.launch {
             val item = itemDao.getById(itemId) ?: return@launch
             val nowDate = LocalDate.now()
-            itemDao.update(item.copy(lastDoneDate = nowDate))
+            itemDao.update(item.copy(lastDoneDate = nowDate, lastNotifiedAt = null))
             historyDao.insert(
                 HistoryEntity(
                     itemId = itemId,
@@ -91,6 +97,7 @@ class ItemDetailViewModel(
                     memo = null
                 )
             )
+            RepeatAlarmScheduler.cancel(appContext, itemId)
             val nextDate = nowDate.plusDays(item.intervalDays.toLong())
             _events.emit("기록됨 · 다음 권장일 ${formatShortDate(nextDate)}")
         }
@@ -101,6 +108,7 @@ class ItemDetailViewModel(
             val item = itemDao.getById(itemId) ?: return@launch
             historyDao.deleteAllForItem(itemId)
             itemDao.delete(item)
+            RepeatAlarmScheduler.cancel(appContext, itemId)
             onDeleted()
         }
     }
@@ -111,14 +119,31 @@ class ItemDetailViewModel(
         }
     }
 
+    fun saveAsTemplate() {
+        viewModelScope.launch {
+            val item = itemDao.getById(itemId) ?: return@launch
+            templateDao.insert(
+                TemplateEntity(
+                    name = item.name,
+                    intervalDays = item.intervalDays,
+                    icon = item.icon,
+                    categoryId = item.categoryId
+                )
+            )
+            _events.emit("템플릿으로 저장됐어요")
+        }
+    }
+
     companion object {
         fun factory(itemId: Long) = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as LastDoneApplication
                 ItemDetailViewModel(
                     itemId = itemId,
+                    appContext = app.applicationContext,
                     itemDao = app.database.itemDao(),
                     historyDao = app.database.historyDao(),
+                    templateDao = app.database.templateDao(),
                     categoryDao = app.database.categoryDao(),
                     settingsRepository = app.settingsRepository
                 )

@@ -80,6 +80,7 @@ fun ItemDetailRoute(
             onEdit = onEdit,
             onDelete = { viewModel.delete(onDeleted = onBack) },
             onDeleteHistory = viewModel::deleteHistory,
+            onSaveAsTemplate = viewModel::saveAsTemplate,
             snackbarHostState = snackbarHostState
         )
         else -> ItemDetailNotFound(onBack = onBack)
@@ -95,6 +96,7 @@ fun ItemDetailScreen(
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
     onDeleteHistory: (Long) -> Unit = {},
+    onSaveAsTemplate: () -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -121,6 +123,13 @@ fun ItemDetailScreen(
                             onClick = {
                                 menuOpen = false
                                 onEdit()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("템플릿으로 저장") },
+                            onClick = {
+                                menuOpen = false
+                                onSaveAsTemplate()
                             }
                         )
                         DropdownMenuItem(
@@ -417,6 +426,7 @@ private fun HistoryRow(
 
 private fun bigStatusText(status: ItemStatus): String = when (status.kind) {
     ItemStatus.Kind.OVERDUE -> "권장일에서 ${status.daysOver}일 초과"
+    ItemStatus.Kind.DUE_TODAY -> "오늘이 권장일"
     ItemStatus.Kind.IMPENDING -> "다음 권장일까지 ${status.daysRemaining}일"
     ItemStatus.Kind.RELAXED -> "다음 권장일까지 ${status.daysRemaining}일"
 }

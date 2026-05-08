@@ -17,5 +17,6 @@ val Gray800 = Color(0xFF424242)
 val Gray900 = Color(0xFF1C1C1C)
 
 val StatusOverdue = Color(0xFFD92D20)
+val StatusDueToday = Color(0xFFE85B27)
 val StatusImpending = Color(0xFFE07B00)
 val StatusRelaxed = Gray500

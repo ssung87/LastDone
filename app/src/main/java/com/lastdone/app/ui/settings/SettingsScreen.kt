@@ -171,8 +171,6 @@ fun SettingsScreen(
             ReadonlyRow(label = "버전", value = "0.1.0")
 
             Spacer(Modifier.height(32.dp))
-            PlusBlock()
-            Spacer(Modifier.height(32.dp))
         }
     }
 
