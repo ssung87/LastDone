@@ -390,3 +390,52 @@ Room으로 구현한다.
 - 다국어 (한국어만)
 
 1차 출시 후 사용자 반응을 보고 결정한다.
+
+---
+
+## 10. 다음 TASK (출시 마무리 + 후속)
+
+MVP 코어 구현 완료 후 출시 전/후 진행할 작업.
+
+### 10.1 출시 전 (Release 준비)
+
+- **Release 빌드 설정**
+  - `signingConfig` 정의 + 키스토어 생성 (`*.keystore` 파일은 git 관리 외 + `local.properties` 또는 환경변수로 비밀번호)
+  - `buildTypes.release` `isMinifyEnabled = true`, `proguardFiles` 검토
+  - R8 룰 점검 (Room/Compose/AdMob/WorkManager 자동 keep 확인)
+- **AdMob 실 단위 ID 교체**
+  - AdMob 콘솔에서 앱 등록 → 광고 단위 ID 발급
+  - `BuildConfig` 분기로 debug = test ID, release = real ID
+  - `AndroidManifest`의 App ID `meta-data`도 release용으로 분기
+- **Google Play Console 등록 준비**
+  - 개인정보처리방침 URL (필수: AdMob/POST_NOTIFICATIONS 권한 사용)
+  - 스토어 리스팅: 스크린샷, 앱 설명, 짧은 소개, 카테고리, 콘텐츠 등급
+  - 데이터 안전 섹션 (수집 데이터 없음, AdMob 추적 ID는 제외 신청 가능)
+- **앱 아이콘 정식화**
+  - 현재 `drawable/ic_launcher.xml` 임시 vector
+  - Asset Studio 또는 디자인 도구로 adaptive icon (foreground + background) 제작
+  - mipmap-* PNG/webp 다해상도 생성
+
+### 10.2 출시 후 (Phase 8 미완 + 폴리시)
+
+- **Google Play Billing — Plus 평생 이용권**
+  - BillingClient 래퍼, `PlusRepository` 실 backing 교체
+  - 구매 복원 흐름, Pending 상태 처리
+  - 설정의 "Plus 구매하기" 버튼 와이어링
+- **AdView lifecycle 정리**
+  - `DisposableEffect`로 `pause/resume/destroy` 호출 (백그라운드 광고 갱신 방지)
+- **빈 상태 추천 항목 예시 (TASK.md 5.2)**
+  - "첫 항목 추가하기" 안내에 추천 항목 카드 3~5개 (탭 → 등록 화면 프리필)
+- **수정 시 lastDoneDate ↔ history 일관성**
+  - 마지막 history 항목 같이 갱신 (또는 사용자에게 옵션 제시)
+
+### 10.3 추후 기능 (사용자 반응 보고)
+
+- **위젯** (홈 화면 위젯) — 임박/초과 항목 한눈에
+- **통계** — 카테고리별 평균 주기, 가장 오래 지난 항목 등
+- **항목별 알림 시간 override** — TASK.md 5.5 명시. 현재 전역 시간만
+- **알림 snooze ("내일 다시 알림")** — TASK.md 5.5 명시
+- **백업/복구 (로컬 export)** — JSON/CSV 내보내기, 가져오기
+- **클라우드 동기화** — Google Drive 또는 자체 백엔드
+- **카테고리 관리 UI** — 추가/수정/삭제 (현재 기본 6종 시드만)
+- **다국어** — 영어 + 일본어 추가

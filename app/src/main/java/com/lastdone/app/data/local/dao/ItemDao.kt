@@ -13,6 +13,9 @@ interface ItemDao {
     @Query("SELECT * FROM items ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<ItemEntity>>
 
+    @Query("SELECT COUNT(*) FROM items")
+    suspend fun count(): Int
+
     @Query("SELECT * FROM items WHERE id = :id")
     suspend fun getById(id: Long): ItemEntity?
 
@@ -24,7 +27,4 @@ interface ItemDao {
 
     @Delete
     suspend fun delete(item: ItemEntity)
-
-    @Query("UPDATE items SET categoryId = :targetId WHERE categoryId = :sourceId")
-    suspend fun reassignCategory(sourceId: Long, targetId: Long)
 }

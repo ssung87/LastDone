@@ -1,31 +1,54 @@
 package com.lastdone.app.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
-private val DarkColors = darkColorScheme()
-private val LightColors = lightColorScheme()
+private val LightColors = lightColorScheme(
+    primary = Ink,
+    onPrimary = Paper,
+    secondary = Gray800,
+    onSecondary = Paper,
+    background = Paper,
+    onBackground = Ink,
+    surface = Paper,
+    onSurface = Ink,
+    surfaceVariant = Gray100,
+    onSurfaceVariant = Gray700,
+    outline = Gray300,
+    outlineVariant = Gray200,
+    error = StatusOverdue,
+    onError = Paper
+)
+
+private val DarkColors = darkColorScheme(
+    primary = Paper,
+    onPrimary = Ink,
+    secondary = Gray200,
+    onSecondary = Ink,
+    background = Color(0xFF000000),
+    onBackground = Paper,
+    surface = Color(0xFF0A0A0A),
+    onSurface = Paper,
+    surfaceVariant = Gray900,
+    onSurfaceVariant = Gray400,
+    outline = Gray800,
+    outlineVariant = Gray900,
+    error = StatusOverdue,
+    onError = Paper
+)
 
 @Composable
 fun LastDoneTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColors
-        else -> LightColors
-    }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+    MaterialTheme(
+        colorScheme = if (darkTheme) DarkColors else LightColors,
+        typography = LastDoneTypography,
+        content = content
+    )
 }

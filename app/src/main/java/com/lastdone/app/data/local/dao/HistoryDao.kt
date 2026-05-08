@@ -20,4 +20,7 @@ interface HistoryDao {
 
     @Query("DELETE FROM histories WHERE itemId = :itemId")
     suspend fun deleteAllForItem(itemId: Long)
+
+    @Query("DELETE FROM histories WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
