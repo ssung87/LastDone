@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -76,6 +77,9 @@ fun SettingsRoute(
         onThemeChange = viewModel::setThemeMode,
         onSortChange = viewModel::setSortMode,
         onNotifyTimeChange = viewModel::setNotifyTime,
+        onQuietHoursEnabledChange = viewModel::setQuietHoursEnabled,
+        onQuietHoursStartChange = viewModel::setQuietHoursStart,
+        onQuietHoursEndChange = viewModel::setQuietHoursEnd,
         onBack = onBack
     )
 }
@@ -88,10 +92,15 @@ fun SettingsScreen(
     onThemeChange: (ThemeMode) -> Unit,
     onSortChange: (SortMode) -> Unit,
     onNotifyTimeChange: (LocalTime) -> Unit,
+    onQuietHoursEnabledChange: (Boolean) -> Unit,
+    onQuietHoursStartChange: (LocalTime) -> Unit,
+    onQuietHoursEndChange: (LocalTime) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     var showTimePicker by remember { mutableStateOf(false) }
+    var showQuietStartPicker by remember { mutableStateOf(false) }
+    var showQuietEndPicker by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -154,6 +163,26 @@ fun SettingsScreen(
                 value = formatTime(state.notifyTime),
                 onClick = { showTimePicker = true }
             )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            SwitchRow(
+                label = "방해금지 시간대",
+                checked = state.quietHoursEnabled,
+                onCheckedChange = onQuietHoursEnabledChange
+            )
+            if (state.quietHoursEnabled) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                ClickableRow(
+                    label = "방해금지 시작",
+                    value = formatTime(state.quietHoursStart),
+                    onClick = { showQuietStartPicker = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                ClickableRow(
+                    label = "방해금지 종료",
+                    value = formatTime(state.quietHoursEnd),
+                    onClick = { showQuietEndPicker = true }
+                )
+            }
             if (BuildConfig.DEBUG) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
@@ -168,7 +197,7 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
             SectionHeader("앱 정보")
-            ReadonlyRow(label = "버전", value = "0.1.0")
+            ReadonlyRow(label = "버전", value = BuildConfig.VERSION_NAME)
 
             Spacer(Modifier.height(32.dp))
         }
@@ -176,6 +205,7 @@ fun SettingsScreen(
 
     if (showTimePicker) {
         TimePickerDialog(
+            title = "기본 알림 시간",
             initial = state.notifyTime,
             onConfirm = {
                 onNotifyTimeChange(it)
@@ -184,11 +214,36 @@ fun SettingsScreen(
             onDismiss = { showTimePicker = false }
         )
     }
+
+    if (showQuietStartPicker) {
+        TimePickerDialog(
+            title = "방해금지 시작",
+            initial = state.quietHoursStart,
+            onConfirm = {
+                onQuietHoursStartChange(it)
+                showQuietStartPicker = false
+            },
+            onDismiss = { showQuietStartPicker = false }
+        )
+    }
+
+    if (showQuietEndPicker) {
+        TimePickerDialog(
+            title = "방해금지 종료",
+            initial = state.quietHoursEnd,
+            onConfirm = {
+                onQuietHoursEndChange(it)
+                showQuietEndPicker = false
+            },
+            onDismiss = { showQuietEndPicker = false }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimePickerDialog(
+    title: String,
     initial: LocalTime,
     onConfirm: (LocalTime) -> Unit,
     onDismiss: () -> Unit
@@ -200,7 +255,7 @@ private fun TimePickerDialog(
     )
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("기본 알림 시간") },
+        title = { Text(title) },
         text = {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 TimePicker(state = timePickerState)
@@ -342,6 +397,25 @@ private fun ClickableRow(label: String, value: String, onClick: () -> Unit) {
 }
 
 @Composable
+private fun SwitchRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
 private fun ReadonlyRow(label: String, value: String) {
     Row(
         modifier = Modifier
@@ -412,6 +486,9 @@ private fun SettingsScreenPreview() {
             onThemeChange = {},
             onSortChange = {},
             onNotifyTimeChange = {},
+            onQuietHoursEnabledChange = {},
+            onQuietHoursStartChange = {},
+            onQuietHoursEndChange = {},
             onBack = {}
         )
     }

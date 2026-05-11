@@ -12,6 +12,7 @@ import com.lastdone.app.data.settings.SettingsRepository
 import com.lastdone.app.data.settings.SortMode
 import com.lastdone.app.domain.ItemStatus
 import com.lastdone.app.domain.calculateItemStatus
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -25,13 +26,15 @@ class HomeViewModel(
 ) : ViewModel() {
 
     private val today: LocalDate = LocalDate.now()
+    private val searchQuery = MutableStateFlow("")
 
     val uiState: StateFlow<HomeUiState> = combine(
         itemDao.observeAll(),
         categoryDao.observeAll(),
         settingsRepository.impendingThreshold,
-        settingsRepository.sortMode
-    ) { items, categories, threshold, sortMode ->
+        settingsRepository.sortMode,
+        searchQuery
+    ) { items, categories, threshold, sortMode, query ->
         val categoryNameById = categories.associate { it.id to it.name }
         val cards = items.map { item ->
             HomeItemUi(
@@ -49,15 +52,26 @@ class HomeViewModel(
                 )
             )
         }
+        val trimmed = query.trim()
+        val filtered = if (trimmed.isEmpty()) cards else cards.filter {
+            it.name.contains(trimmed, ignoreCase = true) ||
+                it.categoryName.contains(trimmed, ignoreCase = true)
+        }
         HomeUiState(
-            items = cards.sortedWith(comparatorFor(sortMode)),
-            groupByStatus = sortMode == SortMode.STATUS
+            items = filtered.sortedWith(comparatorFor(sortMode)),
+            groupByStatus = sortMode == SortMode.STATUS && trimmed.isEmpty(),
+            searchQuery = query,
+            totalItemCount = cards.size
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = HomeUiState(items = emptyList())
     )
+
+    fun onSearchQueryChange(query: String) {
+        searchQuery.value = query
+    }
 
     private fun comparatorFor(sortMode: SortMode): Comparator<HomeItemUi> = when (sortMode) {
         SortMode.STATUS -> statusOrder

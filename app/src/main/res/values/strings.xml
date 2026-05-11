@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">언제했지</string>
+    <string name="widget_description">임박/초과 항목을 한눈에 확인합니다</string>
+    <string name="widget_empty">아직 항목이 없어요</string>
 </resources>

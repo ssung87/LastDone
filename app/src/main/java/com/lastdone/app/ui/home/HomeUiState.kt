@@ -6,7 +6,9 @@ import java.time.LocalDateTime
 
 data class HomeUiState(
     val items: List<HomeItemUi>,
-    val groupByStatus: Boolean = false
+    val groupByStatus: Boolean = false,
+    val searchQuery: String = "",
+    val totalItemCount: Int = 0
 )
 
 data class HomeItemUi(

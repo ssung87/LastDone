@@ -17,6 +17,7 @@ import com.lastdone.app.data.local.entity.TemplateEntity
 import com.lastdone.app.data.settings.SettingsRepository
 import com.lastdone.app.domain.calculateItemStatus
 import com.lastdone.app.notification.RepeatAlarmScheduler
+import com.lastdone.app.widget.LastDoneWidgetProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -98,6 +99,7 @@ class ItemDetailViewModel(
                 )
             )
             RepeatAlarmScheduler.cancel(appContext, itemId)
+            LastDoneWidgetProvider.requestUpdate(appContext)
             val nextDate = nowDate.plusDays(item.intervalDays.toLong())
             _events.emit("기록됨 · 다음 권장일 ${formatShortDate(nextDate)}")
         }
@@ -109,6 +111,7 @@ class ItemDetailViewModel(
             historyDao.deleteAllForItem(itemId)
             itemDao.delete(item)
             RepeatAlarmScheduler.cancel(appContext, itemId)
+            LastDoneWidgetProvider.requestUpdate(appContext)
             onDeleted()
         }
     }

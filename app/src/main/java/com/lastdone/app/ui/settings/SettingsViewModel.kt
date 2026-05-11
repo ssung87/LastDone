@@ -42,6 +42,18 @@ class SettingsViewModel(
         viewModelScope.launch { repository.setNotifyTime(time) }
     }
 
+    fun setQuietHoursEnabled(enabled: Boolean) {
+        viewModelScope.launch { repository.setQuietHoursEnabled(enabled) }
+    }
+
+    fun setQuietHoursStart(time: LocalTime) {
+        viewModelScope.launch { repository.setQuietHoursStart(time) }
+    }
+
+    fun setQuietHoursEnd(time: LocalTime) {
+        viewModelScope.launch { repository.setQuietHoursEnd(time) }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {

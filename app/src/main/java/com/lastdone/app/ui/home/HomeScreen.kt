@@ -12,9 +12,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,11 +26,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -100,48 +106,110 @@ fun HomeScreen(
         },
         bottomBar = { AdBannerSlot() }
     ) { innerPadding ->
-        if (state.items.isEmpty()) {
-            EmptyHome(
-                onSuggestionClick = onSuggestionClick,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                if (state.groupByStatus) {
-                    val grouped = state.items.groupBy { it.status.kind }
-                    statusGroupOrder.forEach { kind ->
-                        val list = grouped[kind].orEmpty()
-                        if (list.isEmpty()) return@forEach
-                        item(key = "section-${kind.name}") {
-                            StatusSectionHeader(kind = kind, count = list.size)
-                        }
-                        items(list, key = { it.id }) { itemUi ->
-                            HomeItemCard(item = itemUi, onClick = { onItemClick(itemUi.id) })
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                thickness = 1.dp
-                            )
-                        }
-                    }
-                } else {
-                    itemsIndexed(state.items, key = { _, item -> item.id }) { index, item ->
-                        HomeItemCard(item = item, onClick = { onItemClick(item.id) })
-                        if (index < state.items.lastIndex) {
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                thickness = 1.dp
-                            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            if (state.totalItemCount > 0) {
+                SearchBar(
+                    query = state.searchQuery,
+                    onQueryChange = viewModel::onSearchQueryChange
+                )
+            }
+            when {
+                state.totalItemCount == 0 -> {
+                    EmptyHome(
+                        onSuggestionClick = onSuggestionClick,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                state.items.isEmpty() -> {
+                    EmptySearchResult(
+                        query = state.searchQuery,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        if (state.groupByStatus) {
+                            val grouped = state.items.groupBy { it.status.kind }
+                            statusGroupOrder.forEach { kind ->
+                                val list = grouped[kind].orEmpty()
+                                if (list.isEmpty()) return@forEach
+                                item(key = "section-${kind.name}") {
+                                    StatusSectionHeader(kind = kind, count = list.size)
+                                }
+                                items(list, key = { it.id }) { itemUi ->
+                                    HomeItemCard(item = itemUi, onClick = { onItemClick(itemUi.id) })
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                        thickness = 1.dp
+                                    )
+                                }
+                            }
+                        } else {
+                            itemsIndexed(state.items, key = { _, item -> item.id }) { index, item ->
+                                HomeItemCard(item = item, onClick = { onItemClick(item.id) })
+                                if (index < state.items.lastIndex) {
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                        thickness = 1.dp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        placeholder = { Text("검색") },
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Filled.Close, contentDescription = "지우기")
+                }
+            }
+        },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        shape = RoundedCornerShape(12.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface
+        )
+    )
+}
+
+@Composable
+private fun EmptySearchResult(query: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "'$query'에 해당하는 항목이 없어요",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

@@ -7,6 +7,7 @@ import com.lastdone.app.LastDoneApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -37,8 +38,14 @@ class RepeatAlarmReceiver : BroadcastReceiver() {
                 }
 
                 val now = LocalDateTime.now()
-                NotificationHelper.sendDueNotification(context, item, today)
-                app.database.itemDao().update(item.copy(lastNotifiedAt = now))
+                val settings = app.settingsRepository.settings.first()
+                val inQuietHours = settings.quietHoursEnabled &&
+                    QuietHours.isWithin(now.toLocalTime(), settings.quietHoursStart, settings.quietHoursEnd)
+
+                if (!inQuietHours) {
+                    NotificationHelper.sendDueNotification(context, item, today)
+                    app.database.itemDao().update(item.copy(lastNotifiedAt = now))
+                }
 
                 val nextFireMillis = now
                     .plusMinutes(item.repeatIntervalMinutes.toLong())

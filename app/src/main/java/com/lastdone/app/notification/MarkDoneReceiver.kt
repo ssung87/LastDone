@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.core.app.NotificationManagerCompat
 import com.lastdone.app.LastDoneApplication
 import com.lastdone.app.data.local.entity.HistoryEntity
+import com.lastdone.app.widget.LastDoneWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,6 +34,7 @@ class MarkDoneReceiver : BroadcastReceiver() {
                 )
                 NotificationManagerCompat.from(context).cancel(itemId.toInt())
                 RepeatAlarmScheduler.cancel(context, itemId)
+                LastDoneWidgetProvider.requestUpdate(context)
             } finally {
                 pendingResult.finish()
             }

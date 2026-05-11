@@ -17,6 +17,7 @@ import com.lastdone.app.data.local.entity.TemplateEntity
 import com.lastdone.app.notification.NotifyPreset
 import com.lastdone.app.notification.RepeatAlarmScheduler
 import com.lastdone.app.notification.RepeatPreset
+import com.lastdone.app.widget.LastDoneWidgetProvider
 import com.lastdone.app.ui.templates.TemplateSelection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -225,6 +226,7 @@ class AddItemViewModel(
                 }
             }
             _state.update { it.copy(isSaving = false, saveSuccess = true) }
+            LastDoneWidgetProvider.requestUpdate(appContext)
         }
     }
 

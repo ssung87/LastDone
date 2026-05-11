@@ -3,6 +3,7 @@ package com.lastdone.app.data.settings
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -28,7 +29,14 @@ class SettingsRepository(context: Context) {
                 ?: SortMode.STATUS,
             notifyTime = prefs[Keys.NotifyTimeSecondOfDay]
                 ?.let { LocalTime.ofSecondOfDay(it.toLong().coerceIn(0L, 86_399L)) }
-                ?: AppSettings.DEFAULT_NOTIFY_TIME
+                ?: AppSettings.DEFAULT_NOTIFY_TIME,
+            quietHoursEnabled = prefs[Keys.QuietHoursEnabled] ?: false,
+            quietHoursStart = prefs[Keys.QuietHoursStartSecondOfDay]
+                ?.let { LocalTime.ofSecondOfDay(it.toLong().coerceIn(0L, 86_399L)) }
+                ?: AppSettings.DEFAULT_QUIET_START,
+            quietHoursEnd = prefs[Keys.QuietHoursEndSecondOfDay]
+                ?.let { LocalTime.ofSecondOfDay(it.toLong().coerceIn(0L, 86_399L)) }
+                ?: AppSettings.DEFAULT_QUIET_END
         )
     }.distinctUntilChanged()
 
@@ -56,10 +64,25 @@ class SettingsRepository(context: Context) {
         store.edit { it[Keys.NotifyTimeSecondOfDay] = time.toSecondOfDay() }
     }
 
+    suspend fun setQuietHoursEnabled(enabled: Boolean) {
+        store.edit { it[Keys.QuietHoursEnabled] = enabled }
+    }
+
+    suspend fun setQuietHoursStart(time: LocalTime) {
+        store.edit { it[Keys.QuietHoursStartSecondOfDay] = time.toSecondOfDay() }
+    }
+
+    suspend fun setQuietHoursEnd(time: LocalTime) {
+        store.edit { it[Keys.QuietHoursEndSecondOfDay] = time.toSecondOfDay() }
+    }
+
     private object Keys {
         val ImpendingThreshold = intPreferencesKey("impending_threshold")
         val ThemeMode = stringPreferencesKey("theme_mode")
         val SortMode = stringPreferencesKey("sort_mode")
         val NotifyTimeSecondOfDay = intPreferencesKey("notify_time_second_of_day")
+        val QuietHoursEnabled = booleanPreferencesKey("quiet_hours_enabled")
+        val QuietHoursStartSecondOfDay = intPreferencesKey("quiet_hours_start_second_of_day")
+        val QuietHoursEndSecondOfDay = intPreferencesKey("quiet_hours_end_second_of_day")
     }
 }

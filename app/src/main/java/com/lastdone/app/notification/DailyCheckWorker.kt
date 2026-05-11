@@ -17,9 +17,12 @@ class DailyCheckWorker(
     override suspend fun doWork(): Result {
         val app = applicationContext as LastDoneApplication
         val items = app.database.itemDao().observeAll().first()
-        val globalNotifyTime = app.settingsRepository.notifyTime.first()
+        val settings = app.settingsRepository.settings.first()
+        val globalNotifyTime = settings.notifyTime
         val today = LocalDate.now()
         val now = LocalDateTime.now()
+        val inQuietHours = settings.quietHoursEnabled &&
+            QuietHours.isWithin(now.toLocalTime(), settings.quietHoursStart, settings.quietHoursEnd)
 
         items.forEach { item ->
             if (!item.notifyEnabled) {
@@ -42,6 +45,10 @@ class DailyCheckWorker(
             val firstFired = item.lastNotifiedAt?.let { !it.isBefore(triggerInstant) } == true
 
             if (!firstFired) {
+                if (inQuietHours) {
+                    // 방해금지 시간대 - 첫 알림 발송을 건너뛰고 다음 워커 실행 때 재평가
+                    return@forEach
+                }
                 NotificationHelper.sendDueNotification(applicationContext, item, today)
                 app.database.itemDao().update(item.copy(lastNotifiedAt = now))
                 if (item.repeatIntervalMinutes > 0) {
