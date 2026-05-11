@@ -25,6 +25,16 @@ android {
         targetSdk = 35
         versionCode = 2
         versionName = "0.2.0"
+
+        // AdMob 테스트 ID (Google 공식 샘플). 디버그 빌드와 실 ID 미발급 시 폴백으로 사용.
+        val testAdmobAppId = "ca-app-pub-3940256099942544~3347511713"
+        val testBannerAdUnit = "ca-app-pub-3940256099942544/6300978111"
+        val admobAppId = localProp("ADMOB_APP_ID") ?: testAdmobAppId
+        val bannerAdUnit = localProp("ADMOB_BANNER_AD_UNIT_ID") ?: testBannerAdUnit
+
+        manifestPlaceholders["admobAppId"] = admobAppId
+        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
+        buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"$bannerAdUnit\"")
     }
 
     signingConfigs {
@@ -45,8 +55,17 @@ android {
     }
 
     buildTypes {
+        debug {
+            // 디버그는 항상 테스트 ID 강제 (운영 광고 노출 방지)
+            val testAdmobAppId = "ca-app-pub-3940256099942544~3347511713"
+            val testBannerAdUnit = "ca-app-pub-3940256099942544/6300978111"
+            manifestPlaceholders["admobAppId"] = testAdmobAppId
+            buildConfigField("String", "ADMOB_APP_ID", "\"$testAdmobAppId\"")
+            buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"$testBannerAdUnit\"")
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
