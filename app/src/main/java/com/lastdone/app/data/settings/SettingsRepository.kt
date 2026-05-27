@@ -39,7 +39,9 @@ class SettingsRepository(context: Context) {
                 ?: AppSettings.DEFAULT_QUIET_END,
             globalRepeatIntervalMinutes = prefs[Keys.GlobalRepeatIntervalMinutes]
                 ?.takeIf { AppSettings.ALLOWED_GLOBAL_REPEAT_MINUTES.contains(it) }
-                ?: AppSettings.DEFAULT_GLOBAL_REPEAT_MINUTES
+                ?: AppSettings.DEFAULT_GLOBAL_REPEAT_MINUTES,
+            doneCount = prefs[Keys.DoneCount] ?: 0,
+            lastReviewedVersion = prefs[Keys.LastReviewedVersion]
         )
     }.distinctUntilChanged()
 
@@ -88,6 +90,16 @@ class SettingsRepository(context: Context) {
         store.edit { it[Keys.GlobalRepeatIntervalMinutes] = sanitized }
     }
 
+    suspend fun incrementDoneCount() {
+        store.edit { prefs ->
+            prefs[Keys.DoneCount] = (prefs[Keys.DoneCount] ?: 0) + 1
+        }
+    }
+
+    suspend fun markReviewed(versionCode: Int) {
+        store.edit { it[Keys.LastReviewedVersion] = versionCode }
+    }
+
     private object Keys {
         val ImpendingThreshold = intPreferencesKey("impending_threshold")
         val ThemeMode = stringPreferencesKey("theme_mode")
@@ -97,5 +109,7 @@ class SettingsRepository(context: Context) {
         val QuietHoursStartSecondOfDay = intPreferencesKey("quiet_hours_start_second_of_day")
         val QuietHoursEndSecondOfDay = intPreferencesKey("quiet_hours_end_second_of_day")
         val GlobalRepeatIntervalMinutes = intPreferencesKey("global_repeat_interval_minutes")
+        val DoneCount = intPreferencesKey("done_count")
+        val LastReviewedVersion = intPreferencesKey("last_reviewed_version")
     }
 }
