@@ -35,6 +35,7 @@ class MarkDoneReceiver : BroadcastReceiver() {
                 NotificationManagerCompat.from(context).cancel(itemId.toInt())
                 RepeatAlarmScheduler.cancel(context, itemId)
                 LastDoneWidgetProvider.requestUpdate(context)
+                app.settingsRepository.incrementDoneCount()
             } finally {
                 pendingResult.finish()
             }
