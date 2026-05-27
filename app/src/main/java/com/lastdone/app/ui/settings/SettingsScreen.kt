@@ -1,7 +1,10 @@
 package com.lastdone.app.ui.settings
 
 import android.Manifest
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -48,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,8 +65,12 @@ import com.lastdone.app.core.format.formatTime
 import com.lastdone.app.data.settings.AppSettings
 import com.lastdone.app.data.settings.SortMode
 import com.lastdone.app.data.settings.ThemeMode
+import com.lastdone.app.feedback.buildFeedbackMailIntent
+import com.lastdone.app.feedback.openPlayStoreListing
+import com.lastdone.app.feedback.requestInAppReview
 import com.lastdone.app.notification.NotificationScheduler
 import com.lastdone.app.ui.theme.LastDoneTheme
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 @Composable
@@ -103,6 +111,26 @@ fun SettingsScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     var showQuietStartPicker by remember { mutableStateOf(false) }
     var showQuietEndPicker by remember { mutableStateOf(false) }
+
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? Activity
+
+    val onRateClick: () -> Unit = {
+        val act = activity
+        if (act != null) {
+            coroutineScope.launch { requestInAppReview(act) }
+        } else {
+            openPlayStoreListing(context)
+        }
+    }
+
+    val onFeedbackClick: () -> Unit = {
+        try {
+            context.startActivity(buildFeedbackMailIntent(context))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(context, "메일 앱이 설치돼 있지 않습니다", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -203,6 +231,12 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            Spacer(Modifier.height(24.dp))
+            SectionHeader("도움말")
+            ClickableRow(label = "별점 남기기", value = "", onClick = onRateClick)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            ClickableRow(label = "문의/제안하기", value = "", onClick = onFeedbackClick)
 
             Spacer(Modifier.height(24.dp))
             SectionHeader("앱 정보")
