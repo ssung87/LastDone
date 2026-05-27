@@ -54,6 +54,10 @@ class SettingsViewModel(
         viewModelScope.launch { repository.setQuietHoursEnd(time) }
     }
 
+    fun setGlobalRepeatIntervalMinutes(minutes: Int) {
+        viewModelScope.launch { repository.setGlobalRepeatIntervalMinutes(minutes) }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {

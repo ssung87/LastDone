@@ -36,7 +36,10 @@ class SettingsRepository(context: Context) {
                 ?: AppSettings.DEFAULT_QUIET_START,
             quietHoursEnd = prefs[Keys.QuietHoursEndSecondOfDay]
                 ?.let { LocalTime.ofSecondOfDay(it.toLong().coerceIn(0L, 86_399L)) }
-                ?: AppSettings.DEFAULT_QUIET_END
+                ?: AppSettings.DEFAULT_QUIET_END,
+            globalRepeatIntervalMinutes = prefs[Keys.GlobalRepeatIntervalMinutes]
+                ?.takeIf { AppSettings.ALLOWED_GLOBAL_REPEAT_MINUTES.contains(it) }
+                ?: AppSettings.DEFAULT_GLOBAL_REPEAT_MINUTES
         )
     }.distinctUntilChanged()
 
@@ -76,6 +79,15 @@ class SettingsRepository(context: Context) {
         store.edit { it[Keys.QuietHoursEndSecondOfDay] = time.toSecondOfDay() }
     }
 
+    suspend fun setGlobalRepeatIntervalMinutes(minutes: Int) {
+        val sanitized = if (AppSettings.ALLOWED_GLOBAL_REPEAT_MINUTES.contains(minutes)) {
+            minutes
+        } else {
+            AppSettings.DEFAULT_GLOBAL_REPEAT_MINUTES
+        }
+        store.edit { it[Keys.GlobalRepeatIntervalMinutes] = sanitized }
+    }
+
     private object Keys {
         val ImpendingThreshold = intPreferencesKey("impending_threshold")
         val ThemeMode = stringPreferencesKey("theme_mode")
@@ -84,5 +96,6 @@ class SettingsRepository(context: Context) {
         val QuietHoursEnabled = booleanPreferencesKey("quiet_hours_enabled")
         val QuietHoursStartSecondOfDay = intPreferencesKey("quiet_hours_start_second_of_day")
         val QuietHoursEndSecondOfDay = intPreferencesKey("quiet_hours_end_second_of_day")
+        val GlobalRepeatIntervalMinutes = intPreferencesKey("global_repeat_interval_minutes")
     }
 }

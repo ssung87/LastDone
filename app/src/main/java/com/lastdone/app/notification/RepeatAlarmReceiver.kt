@@ -26,7 +26,7 @@ class RepeatAlarmReceiver : BroadcastReceiver() {
             try {
                 val app = context.applicationContext as LastDoneApplication
                 val item = app.database.itemDao().getById(itemId) ?: return@launch
-                if (!item.notifyEnabled || item.repeatIntervalMinutes <= 0) return@launch
+                if (!item.notifyEnabled) return@launch
 
                 // 권장일 사이클이 종료(사용자가 "오늘 했어요")됐는지 확인:
                 // 사이클 갱신 후엔 lastDoneDate가 바뀌어 첫 알림 조건부터 다시 평가되어야 한다.
@@ -47,12 +47,15 @@ class RepeatAlarmReceiver : BroadcastReceiver() {
                     app.database.itemDao().update(item.copy(lastNotifiedAt = now))
                 }
 
-                val nextFireMillis = now
-                    .plusMinutes(item.repeatIntervalMinutes.toLong())
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli()
-                RepeatAlarmScheduler.schedule(context, itemId, nextFireMillis)
+                val repeatMinutes = settings.globalRepeatIntervalMinutes
+                if (repeatMinutes > 0) {
+                    val nextFireMillis = now
+                        .plusMinutes(repeatMinutes.toLong())
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli()
+                    RepeatAlarmScheduler.schedule(context, itemId, nextFireMillis)
+                }
             } finally {
                 pendingResult.finish()
             }

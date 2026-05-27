@@ -19,8 +19,12 @@ local.properties
 *.keystore
 *.jks
 
-# Built APKs at repo root
+# Built APKs and AABs at repo root
 /*.apk
+/*.aab
+
+# Scratch / temp images at repo root
+/ChatGPT Image*.png
 
 # Native build
 .externalNativeBuild

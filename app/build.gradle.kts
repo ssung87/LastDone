@@ -23,8 +23,8 @@ android {
         applicationId = "com.lastdone"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 4
+        versionName = "0.2.2"
 
         // AdMob 테스트 ID (Google 공식 샘플). 디버그 빌드와 실 ID 미발급 시 폴백으로 사용.
         val testAdmobAppId = "ca-app-pub-3940256099942544~3347511713"

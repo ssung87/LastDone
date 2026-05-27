@@ -9,7 +9,8 @@ data class AppSettings(
     val notifyTime: LocalTime = DEFAULT_NOTIFY_TIME,
     val quietHoursEnabled: Boolean = false,
     val quietHoursStart: LocalTime = DEFAULT_QUIET_START,
-    val quietHoursEnd: LocalTime = DEFAULT_QUIET_END
+    val quietHoursEnd: LocalTime = DEFAULT_QUIET_END,
+    val globalRepeatIntervalMinutes: Int = DEFAULT_GLOBAL_REPEAT_MINUTES
 ) {
     companion object {
         const val DEFAULT_IMPENDING_THRESHOLD = 3
@@ -18,6 +19,8 @@ data class AppSettings(
         val DEFAULT_NOTIFY_TIME: LocalTime = LocalTime.of(9, 0)
         val DEFAULT_QUIET_START: LocalTime = LocalTime.of(22, 0)
         val DEFAULT_QUIET_END: LocalTime = LocalTime.of(7, 0)
+        const val DEFAULT_GLOBAL_REPEAT_MINUTES = 0
+        val ALLOWED_GLOBAL_REPEAT_MINUTES = listOf(0, 10, 30, 60)
     }
 }
 

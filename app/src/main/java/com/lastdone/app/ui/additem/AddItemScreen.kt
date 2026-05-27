@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lastdone.app.core.format.formatIsoDate
 import com.lastdone.app.notification.NotifyPreset
-import com.lastdone.app.notification.RepeatPreset
 import com.lastdone.app.ui.templates.TemplatePickerSheet
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -182,10 +181,6 @@ fun AddItemScreen(
                     selected = state.notifyPreset,
                     onSelect = viewModel::setNotifyPreset
                 )
-                RepeatPresetDropdown(
-                    selected = state.repeatPreset,
-                    onSelect = viewModel::setRepeatPreset
-                )
             }
         }
     }
@@ -260,44 +255,6 @@ private fun NotifyPresetDropdown(
             onDismissRequest = { expanded = false }
         ) {
             NotifyPreset.entries.forEach { preset ->
-                DropdownMenuItem(
-                    text = { Text(preset.labelKo) },
-                    onClick = {
-                        onSelect(preset)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RepeatPresetDropdown(
-    selected: RepeatPreset,
-    onSelect: (RepeatPreset) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        OutlinedTextField(
-            value = selected.labelKo,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("추가 알림") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            RepeatPreset.entries.forEach { preset ->
                 DropdownMenuItem(
                     text = { Text(preset.labelKo) },
                     onClick = {

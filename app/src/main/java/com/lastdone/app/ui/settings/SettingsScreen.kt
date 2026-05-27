@@ -80,6 +80,7 @@ fun SettingsRoute(
         onQuietHoursEnabledChange = viewModel::setQuietHoursEnabled,
         onQuietHoursStartChange = viewModel::setQuietHoursStart,
         onQuietHoursEndChange = viewModel::setQuietHoursEnd,
+        onGlobalRepeatIntervalChange = viewModel::setGlobalRepeatIntervalMinutes,
         onBack = onBack
     )
 }
@@ -95,6 +96,7 @@ fun SettingsScreen(
     onQuietHoursEnabledChange: (Boolean) -> Unit,
     onQuietHoursStartChange: (LocalTime) -> Unit,
     onQuietHoursEndChange: (LocalTime) -> Unit,
+    onGlobalRepeatIntervalChange: (Int) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -162,6 +164,13 @@ fun SettingsScreen(
                 label = "기본 알림 시간",
                 value = formatTime(state.notifyTime),
                 onClick = { showTimePicker = true }
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            SelectRow(
+                label = "재알림 간격",
+                value = state.globalRepeatIntervalMinutes,
+                options = globalRepeatIntervalOptions,
+                onSelect = onGlobalRepeatIntervalChange
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             SwitchRow(
@@ -476,6 +485,13 @@ private val sortModeOptions = listOf(
     SortMode.CREATED_AT to "등록 순"
 )
 
+private val globalRepeatIntervalOptions = listOf(
+    0 to "끔",
+    10 to "10분",
+    30 to "30분",
+    60 to "1시간"
+)
+
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 private fun SettingsScreenPreview() {
@@ -489,6 +505,7 @@ private fun SettingsScreenPreview() {
             onQuietHoursEnabledChange = {},
             onQuietHoursStartChange = {},
             onQuietHoursEndChange = {},
+            onGlobalRepeatIntervalChange = {},
             onBack = {}
         )
     }

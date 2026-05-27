@@ -16,7 +16,6 @@ import com.lastdone.app.data.local.entity.ItemEntity
 import com.lastdone.app.data.local.entity.TemplateEntity
 import com.lastdone.app.notification.NotifyPreset
 import com.lastdone.app.notification.RepeatAlarmScheduler
-import com.lastdone.app.notification.RepeatPreset
 import com.lastdone.app.widget.LastDoneWidgetProvider
 import com.lastdone.app.ui.templates.TemplateSelection
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,8 +78,7 @@ class AddItemViewModel(
                         icon = existing.icon.orEmpty(),
                         memo = existing.memo.orEmpty(),
                         notifyEnabled = existing.notifyEnabled,
-                        notifyPreset = NotifyPreset.parse(existing.notifyPreset),
-                        repeatPreset = RepeatPreset.parse(existing.repeatIntervalMinutes)
+                        notifyPreset = NotifyPreset.parse(existing.notifyPreset)
                     )
                 }
             }
@@ -118,10 +116,6 @@ class AddItemViewModel(
 
     fun setNotifyPreset(value: NotifyPreset) {
         _state.update { it.copy(notifyPreset = value) }
-    }
-
-    fun setRepeatPreset(value: RepeatPreset) {
-        _state.update { it.copy(repeatPreset = value) }
     }
 
     fun applyTemplate(selection: TemplateSelection) {
@@ -179,7 +173,6 @@ class AddItemViewModel(
                         notifyEnabled = current.notifyEnabled,
                         notifyTime = null,
                         notifyPreset = current.notifyPreset.name,
-                        repeatIntervalMinutes = current.repeatPreset.minutes,
                         createdAt = LocalDateTime.now()
                     )
                 )
@@ -196,11 +189,10 @@ class AddItemViewModel(
                     return@launch
                 }
                 val presetChanged = NotifyPreset.parse(existing.notifyPreset) != current.notifyPreset
-                val repeatChanged = existing.repeatIntervalMinutes != current.repeatPreset.minutes
                 val notifyToggleChanged = existing.notifyEnabled != current.notifyEnabled
                 val intervalOrDateChanged = existing.lastDoneDate != current.lastDoneDate ||
                     existing.intervalDays != intervalDays
-                val notifyResetNeeded = presetChanged || repeatChanged ||
+                val notifyResetNeeded = presetChanged ||
                     notifyToggleChanged || intervalOrDateChanged
                 itemDao.update(
                     existing.copy(
@@ -212,7 +204,6 @@ class AddItemViewModel(
                         memo = current.memo.ifBlank { null },
                         notifyEnabled = current.notifyEnabled,
                         notifyPreset = current.notifyPreset.name,
-                        repeatIntervalMinutes = current.repeatPreset.minutes,
                         lastNotifiedAt = if (notifyResetNeeded) null else existing.lastNotifiedAt
                     )
                 )

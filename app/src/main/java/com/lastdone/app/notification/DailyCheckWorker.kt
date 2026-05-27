@@ -19,6 +19,7 @@ class DailyCheckWorker(
         val items = app.database.itemDao().observeAll().first()
         val settings = app.settingsRepository.settings.first()
         val globalNotifyTime = settings.notifyTime
+        val globalRepeatMinutes = settings.globalRepeatIntervalMinutes
         val today = LocalDate.now()
         val now = LocalDateTime.now()
         val inQuietHours = settings.quietHoursEnabled &&
@@ -51,22 +52,22 @@ class DailyCheckWorker(
                 }
                 NotificationHelper.sendDueNotification(applicationContext, item, today)
                 app.database.itemDao().update(item.copy(lastNotifiedAt = now))
-                if (item.repeatIntervalMinutes > 0) {
+                if (globalRepeatMinutes > 0) {
                     val nextFireMillis = now
-                        .plusMinutes(item.repeatIntervalMinutes.toLong())
+                        .plusMinutes(globalRepeatMinutes.toLong())
                         .atZone(ZoneId.systemDefault())
                         .toInstant()
                         .toEpochMilli()
                     RepeatAlarmScheduler.schedule(applicationContext, item.id, nextFireMillis)
                 }
-            } else if (item.repeatIntervalMinutes > 0 &&
+            } else if (globalRepeatMinutes > 0 &&
                 !RepeatAlarmScheduler.hasActiveAlarm(applicationContext, item.id)
             ) {
                 // 이미 첫 발화는 했지만 알람이 사라진 상태 (재부팅/앱 재설치 등) → 다음 반복 재예약
                 val lastAt = item.lastNotifiedAt ?: now
-                val nextFire = lastAt.plusMinutes(item.repeatIntervalMinutes.toLong())
+                val nextFire = lastAt.plusMinutes(globalRepeatMinutes.toLong())
                 val target = if (nextFire.isBefore(now)) {
-                    now.plusMinutes(item.repeatIntervalMinutes.toLong())
+                    now.plusMinutes(globalRepeatMinutes.toLong())
                 } else nextFire
                 val nextFireMillis = target
                     .atZone(ZoneId.systemDefault())
