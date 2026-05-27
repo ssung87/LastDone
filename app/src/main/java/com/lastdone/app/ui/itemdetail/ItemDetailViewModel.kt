@@ -36,7 +36,7 @@ class ItemDetailViewModel(
     private val historyDao: HistoryDao,
     private val templateDao: TemplateDao,
     categoryDao: CategoryDao,
-    settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val today: LocalDate = LocalDate.now()
@@ -100,6 +100,7 @@ class ItemDetailViewModel(
             )
             RepeatAlarmScheduler.cancel(appContext, itemId)
             LastDoneWidgetProvider.requestUpdate(appContext)
+            settingsRepository.incrementDoneCount()
             val nextDate = nowDate.plusDays(item.intervalDays.toLong())
             _events.emit("기록됨 · 다음 권장일 ${formatShortDate(nextDate)}")
         }
