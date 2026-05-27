@@ -10,7 +10,9 @@ data class AppSettings(
     val quietHoursEnabled: Boolean = false,
     val quietHoursStart: LocalTime = DEFAULT_QUIET_START,
     val quietHoursEnd: LocalTime = DEFAULT_QUIET_END,
-    val globalRepeatIntervalMinutes: Int = DEFAULT_GLOBAL_REPEAT_MINUTES
+    val globalRepeatIntervalMinutes: Int = DEFAULT_GLOBAL_REPEAT_MINUTES,
+    val doneCount: Int = 0,
+    val lastReviewedVersion: Int? = null
 ) {
     companion object {
         const val DEFAULT_IMPENDING_THRESHOLD = 3
