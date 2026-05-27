@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.app.Activity
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -35,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,11 +44,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lastdone.app.BuildConfig
+import com.lastdone.app.LastDoneApplication
 import com.lastdone.app.domain.ItemStatus
+import com.lastdone.app.feedback.ReviewPromptManager
+import com.lastdone.app.feedback.requestInAppReview
 import com.lastdone.app.ui.ads.AdBannerSlot
 import com.lastdone.app.ui.theme.statusColorFor
 import com.lastdone.app.ui.theme.statusLabelFor
@@ -61,6 +68,22 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val app = context.applicationContext as LastDoneApplication
+    val settingsState by app.settingsRepository.settings.collectAsState(initial = null)
+    LaunchedEffect(settingsState?.doneCount, settingsState?.lastReviewedVersion) {
+        val s = settingsState ?: return@LaunchedEffect
+        if (ReviewPromptManager.shouldRequest(
+                doneCount = s.doneCount,
+                lastReviewedVersion = s.lastReviewedVersion,
+                currentVersion = BuildConfig.VERSION_CODE
+            )
+        ) {
+            val activity = context as? Activity ?: return@LaunchedEffect
+            requestInAppReview(activity)
+            app.settingsRepository.markReviewed(BuildConfig.VERSION_CODE)
+        }
+    }
     var menuOpen by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
