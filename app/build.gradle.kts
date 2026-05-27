@@ -124,4 +124,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    testImplementation("junit:junit:4.13.2")
 }
